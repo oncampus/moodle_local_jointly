@@ -265,7 +265,7 @@ function get_lom($files) {
 
     $domtree = new DOMDocument('1.0', 'UTF-8');
 
-    $xmlRoot = $domtree->createElement("record");
+    $xmlRoot = $domtree->createElement("lom");
 
     $xmlRoot = $domtree->appendChild($xmlRoot);
 
@@ -296,6 +296,7 @@ function get_lom($files) {
 		$xml_filename = $tempname.'.xml';
 		$domtree->save($xml_filename);
 		unlink($tempname);
-		send_file($xml_filename, 'lom.xml');
+		send_file($xml_filename, 'lom.xml', null, 0, false, false, '', true);
+		unlink($xml_filename);
 	}
 }
