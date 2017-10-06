@@ -300,3 +300,23 @@ function get_lom($files) {
 		unlink($xml_filename);
 	}
 }
+
+function get_license_types_string($license_ids) {
+	global $DB;
+	
+	$licenses = $DB->get_records('license');
+	
+	$ids = '';
+	if (count($license_ids) > 0) {
+		$ids = '(';
+		foreach ($license_ids as $id) {
+			if (strpos($ids, "'") !== false) {
+				$ids .= ', ';
+			}
+			$ids .= "'".$licenses[$id]->shortname."'";
+		}
+		$ids .= ')';
+	}
+	
+	return $ids;
+}

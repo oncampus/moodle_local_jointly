@@ -28,8 +28,17 @@ if ($hassiteconfig) {
     $settings = new admin_settingpage('local_jointly', get_string('pluginname', 'local_jointly'));
     $ADMIN->add('localplugins', $settings);
 	
-	$setting = new admin_setting_configcheckbox('freeforall', get_string('freeforall_title', 'local_jointly'), get_string('freeforall_desc', 'local_jointly'), 1);
+	$setting = new admin_setting_configcheckbox('local_jointly/freeforall', get_string('freeforall_title', 'local_jointly'), get_string('freeforall_desc', 'local_jointly'), 0);
 	$settings->add($setting);
+	
+	$setting = new admin_setting_configcheckbox('local_jointly/admins_only', get_string('admins_only_title', 'local_jointly'), get_string('admins_only_desc', 'local_jointly'), 0);
+	$settings->add($setting);
+	
+	require_once($CFG->dirroot.'/local/jointly/lib.php');
+    $options = local_jointly_get_license_types();
+    $settings->add(new admin_setting_configmultiselect('local_jointly/license_types',
+        get_string('license_types', 'local_jointly'), get_string('license_types_desc', 'local_jointly'),
+        array_keys($options), $options));
 	
 	$name = 'local_jointly/file_types';
 	$title = get_string('file_types', 'local_jointly');

@@ -30,14 +30,15 @@ $format = optional_param('format', '', PARAM_RAW);
 
 $context = context_system::instance();
  
-if (get_config('local_jointly', 'freeforall') == 1) {
+if (get_config('local_jointly', 'freeforall') != 1) {
 	require_login();
-
-	if (!has_capability('moodle/site:config', $context)) {
-		redirect($CFG->wwwroot);
-	}
-
 }
+
+if (get_config('local_jointly', 'admins_only') == 1 and !has_capability('moodle/site:config', $context)) {
+	redirect($CFG->wwwroot);
+}
+
+
  
 $PAGE->set_context($context);
 $PAGE->set_url('/local/jointly/view.php');
@@ -51,9 +52,13 @@ else if ($fromform = $mform->get_data()) {
 	//
 }
 
+$config = get_config('local_jointly');
+$license_ids = explode(',', $config->license_types);
+$license_types = get_license_types_string($license_ids);
+
 $sql = 'SELECT * 
 		  FROM {files} 
-		 WHERE license is not NULL 
+		 WHERE license in '.$license_types.' 
 		   AND component != :resource ';
 		   
 $and = '';

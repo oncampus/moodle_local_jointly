@@ -27,4 +27,14 @@ function local_jointly_cron() {
 function local_jointly_extend_settings_navigation() {
 	//
 }
+
+function local_jointly_get_license_types() {
+	global $DB;
+	$license_types = array();
+	$records = $DB->get_records('license');
+	foreach ($records as $record) {
+		$license_types[$record->id] = $record->shortname;
+	}
+	return $license_types;
+}
 ?>

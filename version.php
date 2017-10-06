@@ -20,7 +20,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
  
-$plugin->version  = 2017092800;
+$plugin->version  = 2017100600;
 $plugin->requires = 2016052301;
 $plugin->cron     = 0;
 $plugin->release = '1.0 (Build: 2017092800)';

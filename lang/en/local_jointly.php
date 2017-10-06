@@ -22,6 +22,10 @@
 
 $string['pluginname'] = 'jointly';
 
+$string['admins_only_title'] = 'Admins only';
+$string['admins_only_desc'] = 'Wenn das Häkchen gesetzt ist, können nur Teilnehmer/innen auf 
+							   die Dateien und Inforamtionen zugreifen, die Seitenbearbeitungsrechte 
+							   (moodle/site:config) besitzen.';
 $string['file_types'] = 'Dateitypen';
 $string['file_types_desc'] = 'Folgende Dateitypen werden berücksichtigt. 
 							  Wenn das Feld leer bleibt, werden alle Dateitypen erlaubt. 
@@ -31,6 +35,9 @@ $string['freeforall_title'] = 'free for all';
 $string['freeforall_desc'] = 'Wenn das Häkchen gesetzt ist, könne alle Dateien, 
 							  die in Moodle angelegt wurden, heruntergeladen werden. 
 							  Egal ob man im System angemeldet ist oder nicht.';
+$string['license_types'] = 'Erlaubte Lizenz-Typen';
+$string['license_types_desc'] = 'Es werden nur Dateien ausgegeben, die unter den hier 
+								 ausgewählten Lizenzen erstellt wurden.';
 
 $string['component'] = 'component';
 $string['description'] = 'description';
