@@ -25,7 +25,6 @@ defined('MOODLE_INTERNAL') || die();
 require_once("$CFG->libdir/formslib.php");
  
 class search_form extends moodleform {
-    //Add elements to form
     function definition() {
         global $CFG;
  
@@ -33,10 +32,8 @@ class search_form extends moodleform {
  
 		$mform->addElement('text', 'search', get_string('search'));
 		$mform->setDefault('search', '');
-		/*
-		$mform->addElement('date_selector', 'from', get_string('from'));
-		$mform->addElement('date_selector', 'to', get_string('to'));
-		*/
+		$mform->setType('search', PARAM_RAW);
+
 		$this->add_action_buttons(true, get_string('search'));
     }
 

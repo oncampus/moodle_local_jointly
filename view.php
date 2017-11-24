@@ -79,7 +79,7 @@ if ($format == '') {
 	
 	$mform->display();
 	
-	$table = new flexible_table(MODULE_TABLE);
+	$table = new flexible_table('MODULE_TABLE');
 	$table->define_columns(array('filename', 
 								 'description',
 								 'license',

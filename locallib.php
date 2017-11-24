@@ -54,6 +54,7 @@ function get_table_row($file) {
 		}
 	}
 	elseif ($file->component == 'mod_label') {
+		$description = '';
 		if ($metadata = get_label_metadata_desc($file->id, $filename, $file->mimetype)) {
 			$description = $metadata;
 		}
@@ -63,10 +64,44 @@ function get_table_row($file) {
 			$description = $metadata;
 		}
 	}
-	elseif ($file->component == 'mod_forum' and $file->filearea == 'post') {
-		if ($metadata = get_forum_post_metadata_desc($file->id, $filename, $file->mimetype)) {
+	elseif ($file->component == 'mod_forum' and ($file->filearea == 'post' or $file->filearea == 'intro')) {
+		$description = '';
+		if ($metadata = get_forum_metadata_desc($file->id, $filename, $file->mimetype, $file->filearea)) {
+			$description = $metadata;
+			if ($tags = get_forum_post_metadata_tags($file->id, $file->filearea)) {
+				$description .= ' (tags: '.implode(', ', $tags).')';
+			}
+		}
+	}
+	elseif ($file->component == 'mod_folder') {
+		/* if ($tags = get_context_tags($file->id)) {
+			$description = ' tags: '.implode(', ', $tags);
+		} */
+	}
+	elseif ($file->component == 'mod_wiki') {
+		$description = '';
+		if ($metadata = get_wiki_metadata_desc($file->id, $filename, $file->mimetype, $file->filearea)) {
 			$description = $metadata;
 		}
+		if ($tags = get_wiki_pages_metadata_tags($file->id, $file->filearea)) {
+			$description .= ' (tags: '.implode(', ', $tags).')';
+		}
+	}
+	elseif ($file->component == 'mod_lesson') {
+		$description = '';
+		if (strpos($file->mimetype, 'image') !== false and $metadata = get_lesson_metadata_desc($file->id, $filename, $file->filearea)) {
+			$description = $metadata;
+		}
+	}
+	elseif ($file->component == 'mod_data') {
+		$description = '';
+		if ($metadata = get_data_metadata_desc($file->id, $filename, $file->filearea)) {
+			$description = $metadata;
+		}
+	}
+	
+	if ($tags = get_context_tags($file->id)) {
+		$description .= ' (tags: '.implode(', ', $tags).')';
 	}
 	
 	$url = $CFG->wwwroot.'/local/jointly/download.php?id='.$file->id;
@@ -100,15 +135,199 @@ function get_table_row($file) {
 	return $data;
 }
 
-function get_forum_post_metadata_desc($fileid, $filename, $mimetype) {
+function get_wiki_pages_metadata_tags($fileid, $filearea) {
 	global $DB;
-	$sql = 'SELECT fp.message 
-			  FROM {forum_posts} fp, {files} f 
-			 WHERE fp.id = f.itemid 
-			   AND f.id = :fileid ';
-			 
-	$params = array('fileid' => $fileid);
+	$tags = array();
+	
+	if ($filearea == 'attachments') {
+		$sql = "SELECT t.rawname, t.id 
+				  FROM {tag} t, {tag_instance} ti, {files} f 
+				 WHERE t.id = ti.tagid 
+				   AND ti.component = 'mod_wiki' 
+				   AND ti.itemtype = 'wiki_pages' 
+				   AND ti.itemid = f.itemid 
+				   AND f.id = :fileid ";
+				   
+		$params = array('fileid' => $fileid);
+		if ($metadata = $DB->get_records_sql($sql, $params)) {
+			foreach ($metadata as $tag) {
+				$tags[] = $tag->rawname;
+			}	
+		}
+	}
+	
+	if (count($tags) > 0) {
+		return $tags;
+	}
+	
+	return false;
+}
 
+function get_forum_post_metadata_tags($fileid, $filearea) {
+	global $DB;
+	$tags = array();
+	
+	if ($filearea == 'post') {
+		$sql = "SELECT t.rawname, t.id 
+				  FROM {tag} t, {tag_instance} ti, {files} f 
+				 WHERE t.id = ti.tagid 
+				   AND ti.component = 'mod_forum' 
+				   AND ti.itemtype = 'forum_posts' 
+				   AND ti.itemid = f.itemid 
+				   AND f.id = :fileid ";
+				   
+		$params = array('fileid' => $fileid);
+		if ($metadata = $DB->get_records_sql($sql, $params)) {
+			foreach ($metadata as $tag) {
+				$tags[] = $tag->rawname;
+			}	
+		}
+	}
+	
+	if (count($tags) > 0) {
+		return $tags;
+	}
+	
+	return false;
+}
+
+function get_data_metadata_desc($fileid, $filename, $filearea) {
+	global $DB;
+	
+	if ($filearea == 'intro') {
+		$sql = 'SELECT d.intro as message 
+				  FROM {data} d, {course_modules} cm, {context} c, {files} f 
+				 WHERE d.id = cm.instance 
+				   AND cm.id = c.instanceid 
+				   AND c.id = f.contextid 
+				   AND f.id = :fileid ';
+				   
+		$params = array('fileid' => $fileid);
+	}
+	elseif ($filearea == 'content') {
+		$sql = 'SELECT df.type, df.description, dc.content, dc.content1 
+				  FROM {data_fields} df, {data_content} dc, {files} f 
+				 WHERE df.id = dc.fieldid 
+				   AND dc.id = f.itemid 
+				   AND f.id = :fileid ';
+				   
+		$params = array('fileid' => $fileid);
+		if ($metadata = $DB->get_record_sql($sql, $params)) {
+			if ($metadata->type == 'picture') {
+				return $metadata->content1;
+			}
+			elseif ($metadata->type == 'file') {
+				return $metadata->description;
+			}
+			elseif ($metadata->type == 'textarea') {
+				$description = get_image_description($metadata->content, $filename);
+				if ($description != '') {
+					return $description;
+				}
+			}
+		}
+	}
+	
+	if (isset($sql) and isset($params) and $metadata = $DB->get_record_sql($sql, $params)) {	
+		$description = get_image_description($metadata->message, $filename);
+		if ($description != '') {
+			return $description;
+		}
+	}
+	
+	return false;
+}
+
+function get_lesson_metadata_desc($fileid, $filename, $filearea) {
+	global $DB;
+	
+	if ($filearea == 'intro') {
+		$sql = 'SELECT l.intro as message 
+				  FROM {lesson} l, {course_modules} cm, {context} c, {files} f 
+				 WHERE l.id = cm.instance 
+				   AND cm.id = c.instanceid 
+				   AND c.id = f.contextid 
+				   AND f.id = :fileid ';
+				   
+		$params = array('fileid' => $fileid);
+	}
+	elseif ($filearea == 'page_contents') {
+		$sql = 'SELECT lp.contents as message 
+				  FROM {lesson_pages} lp, {files} f 
+				 WHERE lp.id = f.itemid 
+				   AND f.id = :fileid ';
+				   
+		$params = array('fileid' => $fileid);
+	}
+	
+	if (isset($sql) and isset($params) and $metadata = $DB->get_record_sql($sql, $params)) {	
+		$description = get_image_description($metadata->message, $filename);
+		if ($description != '') {
+			return $description;
+		}
+	}
+	
+	return false;
+}
+
+function get_wiki_metadata_desc($fileid, $filename, $mimetype, $filearea) {
+	global $DB;
+	$sql = '';
+	$params = array();
+	
+	if ($filearea == 'intro') {
+		$sql = 'SELECT w.intro as message 
+				  FROM {wiki} w, {course_modules} cm, {context} c, {files} f 
+				 WHERE w.id = cm.instance 
+				   AND cm.id = c.instanceid 
+				   AND c.id = f.contextid 
+				   AND f.id = :fileid ';
+				   
+		$params = array('fileid' => $fileid);
+	
+	}
+	else {
+		$sql = 'SELECT wp.cachedcontent as message 
+				  FROM {wiki_pages} wp, {files} f 
+				 WHERE wp.id = f.itemid 
+				   AND f.id = :fileid ';
+				   
+		$params = array('fileid' => $fileid);
+	}
+	if ($metadata = $DB->get_record_sql($sql, $params)) {
+		
+		if (strpos($mimetype, 'image') !== false) {
+			$description = get_image_description($metadata->message, $filename);
+			if ($description != '') {
+				return $description;
+			}
+		}
+	}
+	return false;
+}
+
+function get_forum_metadata_desc($fileid, $filename, $mimetype, $filearea) {
+	global $DB;
+	
+	if ($filearea == 'intro') {
+		$sql = 'SELECT forum.intro as message, forum.id 
+				  FROM {forum} forum, {course_modules} cm, {context} c, {files} f 
+				 WHERE forum.id = cm.instance 
+				   AND cm.id = c.instanceid 
+				   AND c.id = f.contextid 
+				   AND f.id = :fileid ';
+				 
+		$params = array('fileid' => $fileid);
+	}
+	else {
+		$sql = 'SELECT fp.message, fp.id 
+				  FROM {forum_posts} fp, {files} f 
+				 WHERE fp.id = f.itemid 
+				   AND f.id = :fileid ';
+				 
+		$params = array('fileid' => $fileid);
+	}
+		
 	if ($metadata = $DB->get_record_sql($sql, $params)) {
 		if (strpos($mimetype, 'image') !== false) {
 			$description = get_image_description($metadata->message, $filename);
@@ -160,12 +379,6 @@ function get_label_metadata_desc($fileid, $filename, $mimetype) {
 				return $description;
 			}
 		}
-		elseif (strpos($mimetype, 'audio') !== false) { // Keine Beschreibung vorhanden
-			$description = 'audio';
-			if ($description != '') {
-				return $description;
-			}
-		}
 	}
 	return false;
 }
@@ -181,8 +394,29 @@ function get_resource_metadata($fileid) {
 			 
 	$params = array('fileid' => $fileid);
 
-	if ($metadata = $DB->get_record_sql($sql, $params)) {
+	if ($metadata = $DB->get_record_sql($sql, $params)) {		
 		return $metadata;
+	}
+	return false;
+}
+
+function get_context_tags($fileid) {
+	global $DB;
+	$sql = "SELECT t.rawname 
+			  FROM {tag} t, {tag_instance} ti, {files} f 
+			 WHERE t.id = ti.tagid 
+			   AND ti.itemtype = 'course_modules'
+			   AND ti.contextid = f.contextid 
+			   AND f.id = :fileid ";
+			  
+	$params = array('fileid' => $fileid);
+	
+	if ($result = $DB->get_records_sql($sql, $params)) {
+		$tags = array();
+		foreach ($result as $tag) {
+			$tags[] = $tag->rawname;
+		}
+		return $tags;
 	}
 	return false;
 }
@@ -200,7 +434,6 @@ function get_image_description($html, $filename) {
 			}
 		}
 	}
-	//print_object($images);
 	foreach ($images as $image) {
 		if (strpos($image, rawurlencode($filename)) !== false) {
 			$offset = strpos($image, 'alt="');
