@@ -99,6 +99,15 @@ function get_table_row($file) {
 			$description = $metadata;
 		}
 	}
+	elseif ($file->component == 'mod_book') {
+		$description = '';
+		if (strpos($file->mimetype, 'image') !== false and $metadata = get_book_metadata_desc($file->id, $filename, $file->filearea)) {
+			$description = $metadata;
+		}
+		if ($file->filearea == 'chapter' and $tags = get_book_chapter_metadata_tags($file->id, $file->filearea)) {
+			$description .= ' (tags: '.implode(', ', $tags).')';
+		}
+	}
 	
 	if ($tags = get_context_tags($file->id)) {
 		$description .= ' (tags: '.implode(', ', $tags).')';
@@ -133,6 +142,34 @@ function get_table_row($file) {
 	$data[] = $file->timemodified;
 	
 	return $data;
+}
+
+function get_book_chapter_metadata_tags($fileid, $filearea) {
+	global $DB;
+	$tags = array();
+	
+	if ($filearea == 'chapter') {
+		$sql = "SELECT t.rawname, t.id 
+				  FROM {tag} t, {tag_instance} ti, {files} f 
+				 WHERE t.id = ti.tagid 
+				   AND ti.component = 'mod_book' 
+				   AND ti.itemtype = 'book_chapters' 
+				   AND ti.itemid = f.itemid 
+				   AND f.id = :fileid ";
+				   
+		$params = array('fileid' => $fileid);
+		if ($metadata = $DB->get_records_sql($sql, $params)) {
+			foreach ($metadata as $tag) {
+				$tags[] = $tag->rawname;
+			}	
+		}
+	}
+	
+	if (count($tags) > 0) {
+		return $tags;
+	}
+	
+	return false;
 }
 
 function get_wiki_pages_metadata_tags($fileid, $filearea) {
@@ -226,6 +263,37 @@ function get_data_metadata_desc($fileid, $filename, $filearea) {
 				}
 			}
 		}
+	}
+	
+	if (isset($sql) and isset($params) and $metadata = $DB->get_record_sql($sql, $params)) {	
+		$description = get_image_description($metadata->message, $filename);
+		if ($description != '') {
+			return $description;
+		}
+	}
+	
+	return false;
+}
+
+function get_book_metadata_desc($fileid, $filename, $filearea) {
+	global $DB;
+	if ($filearea == 'intro') {
+		$sql = 'SELECT b.intro as message 
+				  FROM {book} b, {course_modules} cm, {context} c, {files} f 
+				 WHERE b.id = cm.instance 
+				   AND cm.id = c.instanceid 
+				   AND c.id = f.contextid 
+				   AND f.id = :fileid ';
+				   
+		$params = array('fileid' => $fileid);
+	}
+	elseif ($filearea == 'chapter') {
+		$sql = 'SELECT bc.content as message 
+				  FROM {book_chapters} bc, {files} f 
+				 WHERE bc.id = f.itemid 
+				   AND f.id = :fileid ';
+				   
+		$params = array('fileid' => $fileid);
 	}
 	
 	if (isset($sql) and isset($params) and $metadata = $DB->get_record_sql($sql, $params)) {	
