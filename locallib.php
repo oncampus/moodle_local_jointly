@@ -566,31 +566,78 @@ function get_lom($files) {
 
     $domtree = new DOMDocument('1.0', 'UTF-8');
 
-    $xmlRoot = $domtree->createElement("lom");
+    $xmlRoot = $domtree->createElement("records");
 
     $xmlRoot = $domtree->appendChild($xmlRoot);
 
-	foreach ($files as $file) {
-		$currentfile = $domtree->createElement("general");
+	// http://sodis.de/cp/oai_pmh/oai.php?verb=getRecord&identifier=BWS-04986135&metadataPrefix=oai_lom-eaf
+	// https://www.oaforum.org/otherfiles/berl_oai-tutorial_de.pdf
+	
+	foreach ($files as $file) { // ToDo: pro file 1x <record>
+		$currentfile = $domtree->createElement("record");
 		$currentfile = $xmlRoot->appendChild($currentfile);
-
-		$title = $domtree->createElement('title');
-		$currentfile->appendChild($title);
 		
-		$description = $domtree->createElement('description');
-		$currentfile->appendChild($description);
+		$header = $domtree->createElement("header");
+		$currentfile->appendChild($header);
 		
-		$filename = $file->filename;
-		$desc = '';
-		if ($file->component == 'mod_resource') {			
-			if ($metadata = get_resource_metadata($file->id)) {
-				$filename = $metadata->name;
-				$desc = $metadata->intro;
-			}
-		}
+			$identifier = $domtree->createElement("identifier");
+			$header->appendChild($identifier);
+			
+			$datestamp = $domtree->createElement("datestamp", $file->timecreated);
+			$header->appendChild($datestamp);
 		
-		$title->appendChild($domtree->createElement('string', $filename));
-		$description->appendChild($domtree->createElement('string', $desc));
+		$metadata = $domtree->createElement("metadata");
+		$currentfile->appendChild($metadata);
+		
+			$lom = $domtree->createElement("lom");
+			$metadata->appendChild($lom);
+			
+				$general = $domtree->createElement("general");
+				$lom->appendChild($general);
+				
+					$filename = $file->filename;
+					$desc = '';
+					if ($file->component == 'mod_resource') {			
+						if ($metadata = get_resource_metadata($file->id)) {
+							$filename = $metadata->name;
+							$desc = $metadata->intro;
+						}
+					}
+					
+					$title = $domtree->createElement('title');
+					$general->appendChild($title);
+					
+						$title->appendChild($domtree->createElement('string', $filename));
+					
+					$description = $domtree->createElement('description');
+					$general->appendChild($description);
+					
+						$description->appendChild($domtree->createElement('string', $desc));
+				
+				$technical = $domtree->createElement("technical");
+				$lom->appendChild($technical);
+				
+					$format = $domtree->createElement("format", $file->mimetype);
+					$technical->appendChild($format);
+					
+					$size = $domtree->createElement("size", $file->filesize);
+					$technical->appendChild($size);
+					
+					$location = $domtree->createElement("location", $CFG->wwwroot.'/local/jointly/download.php?id='.$file->id);
+					$technical->appendChild($location);
+				
+				$educational = $domtree->createElement("educational");
+				$lom->appendChild($educational);
+				
+					$learningResourceType = $domtree->createElement("learningResourceType");
+					$educational->appendChild($learningResourceType);
+		
+						$source = $domtree->createElement("source");
+						$learningResourceType->appendChild($source);
+						
+						$value = $domtree->createElement("value");
+						$learningResourceType->appendChild($value);
+		
 	}
 
 	if ($tempname = tempnam($CFG->dirroot.'/local/jointly/xml/', 'lom_')) {
