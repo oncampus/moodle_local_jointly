@@ -565,78 +565,146 @@ function get_lom($files) {
 	$xml = '';
 
     $domtree = new DOMDocument('1.0', 'UTF-8');
+	
+	$xmlMeta = $domtree->createElement("OAI-PMH");
+	$xmlMeta->setAttribute("xmlns", "http://www.openarchives.org/OAI/2.0/");
+	$xmlMeta->setAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
+	$xmlMeta->setAttribute("xsi:schemaLocation", "http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd");
 
-    $xmlRoot = $domtree->createElement("records");
+	$datetime = new DateTime(date('Y-m-d H:i:s'));
+	$datetime = $datetime->format('Y-m-d\T H:i:s\Z'); // ISO8601 acc. to http://openarchives.org/OAI/openarchivesprotocol.html#Dates
+	
+	$xmlResponseDate = $domtree->createElement("responseDate", $datetime);
+	$xmlMeta->appendChild($xmlResponseDate);
+	
+	$requesturi = $CFG->wwwroot . '\local\jointly\view.php?format=lom';
+	$xmlRequest = $domtree->createElement("request", $requesturi);
+	$xmlRequest->setAttribute("verb", "GetRecord");
+	$xmlRequest->setAttribute("metadataPrefix", "oai_lom-fhl");  // tbd
+	$xmlRequest->setAttribute("identifier", "FHL-22082018"); // Can be implemented over a form for individual settings, maybe?
+	$xmlMeta->appendChild($xmlRequest);	
+	
+	$xmlGetRecord = $domtree->createElement("GetRecord");
+	$xmlMeta->appendChild($xmlGetRecord);	
+	
+		$xmlRecord = $domtree->createElement("record");
+		$xmlGetRecord->appendChild($xmlRecord);
+		
+			$xmlHeader = $domtree->createElement("header");
+			$xmlRecord->appendChild($xmlHeader);
+	
+				$xmlHeaderIdentifier = $domtree->createElement("identifier", "unknown");
+				$xmlHeader->appendChild($xmlHeaderIdentifier);
+				
+				$xmlHeaderDatestamp = $domtree->createElement("datestamp", $datetime);
+				$xmlHeader->appendChild($xmlHeaderDatestamp);	
+	
+			$xmlMetaData = $domtree->createElement("metadata");
+			$xmlRecord->appendChild($xmlMetaData);
+	
+				$xmlMetaDataLOM = $domtree->createElement("lom");
+				$xmlMetaDataLOM->setAttribute("xmlns", "http://ltsc.ieee.org/xsd/LOM");
+				$xmlMetaDataLOM->setAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
+				$xmlMetaDataLOM->setAttribute("xsi:schemaLocation", "http://ltsc.ieee.org/xsd/LOM http://ltsc.ieee.org/xsd/lomv1.0/lom.xsd");	
+				$xmlMetaData->appendChild($xmlMetaDataLOM);
 
-    $xmlRoot = $domtree->appendChild($xmlRoot);
+	
+	// TBD - Child elements for meta data... like general, description,etc...
+
+	// Merge child elements with opening element		
+	$domtree->appendChild($xmlMeta);
+
 
 	// http://sodis.de/cp/oai_pmh/oai.php?verb=getRecord&identifier=BWS-04986135&metadataPrefix=oai_lom-eaf
 	// https://www.oaforum.org/otherfiles/berl_oai-tutorial_de.pdf
 	
 	foreach ($files as $file) { // ToDo: pro file 1x <record>
-		$currentfile = $domtree->createElement("record");
-		$currentfile = $xmlRoot->appendChild($currentfile);
+		$item = $domtree->createElement("item");
+		$xmlRecord->appendChild($item);
 		
 		$header = $domtree->createElement("header");
-		$currentfile->appendChild($header);
+		$item->appendChild($header);
 		
-			$identifier = $domtree->createElement("identifier");
+			$identifier = $domtree->createElement("identifier", "FHL-" . $file->id);
 			$header->appendChild($identifier);
 			
-			$datestamp = $domtree->createElement("datestamp", $file->timecreated);
+			$datestamp = $domtree->createElement("datestamp", date('Y-m-d H:i:s', $file->timecreated));
 			$header->appendChild($datestamp);
 		
-		$metadata = $domtree->createElement("metadata");
-		$currentfile->appendChild($metadata);
 		
-			$lom = $domtree->createElement("lom");
-			$metadata->appendChild($lom);
+		$filename = $file->filename;
+		$desc = '';
+		if ($file->component == 'mod_resource') {			
+			if ($metadata = get_resource_metadata($file->id)) {
+				$filename = $metadata->name;
+				$desc = $metadata->intro;
+			}
+		}		
+		
+		$general = $domtree->createElement("general");
+		$item->appendChild($general);
+		
+			$title = $domtree->createElement('title');
+			$general->appendChild($title);
 			
-				$general = $domtree->createElement("general");
-				$lom->appendChild($general);
+				$title_string = $domtree->createElement('string', $filename);
+				$title_string->setAttribute("language", "de");
+				$title->appendChild($title_string);
 				
-					$filename = $file->filename;
-					$desc = '';
-					if ($file->component == 'mod_resource') {			
-						if ($metadata = get_resource_metadata($file->id)) {
-							$filename = $metadata->name;
-							$desc = $metadata->intro;
-						}
-					}
-					
-					$title = $domtree->createElement('title');
-					$general->appendChild($title);
-					
-						$title->appendChild($domtree->createElement('string', $filename));
-					
-					$description = $domtree->createElement('description');
-					$general->appendChild($description);
-					
-						$description->appendChild($domtree->createElement('string', $desc));
+			$description = $domtree->createElement('description');
+			$general->appendChild($description);
+			
+				$description_string = $domtree->createElement('string', $desc);
+				$description_string->setAttribute("language", "de");
+				$description->appendChild($description_string);
 				
-				$technical = $domtree->createElement("technical");
-				$lom->appendChild($technical);
 				
-					$format = $domtree->createElement("format", $file->mimetype);
-					$technical->appendChild($format);
-					
-					$size = $domtree->createElement("size", $file->filesize);
-					$technical->appendChild($size);
-					
-					$location = $domtree->createElement("location", $CFG->wwwroot.'/local/jointly/download.php?id='.$file->id);
-					$technical->appendChild($location);
+			$author = $domtree->createElement('author', $file->author);
+			$general->appendChild($author);
 				
-				$educational = $domtree->createElement("educational");
-				$lom->appendChild($educational);
+			$timecreated = $domtree->createElement('timecreated', date('Y-m-d H:i:s', $file->timecreated));
+			$general->appendChild($timecreated);
 				
-					$learningResourceType = $domtree->createElement("learningResourceType");
-					$educational->appendChild($learningResourceType);
+			$timemodified = $domtree->createElement('timemodified', date('Y-m-d H:i:s', $file->timemodified));
+			$general->appendChild($timemodified);
+							
+			$licence = $domtree->createElement('licence', $file->license);
+			$general->appendChild($licence);
+			
+			$licencedesc_get = get_licence_description_string($file->license);
+			
+			$licencedesc = $domtree->createElement('licencedesc', $licencedesc_get->fullname);
+			$general->appendChild($licencedesc);
 		
-						$source = $domtree->createElement("source");
-						$learningResourceType->appendChild($source);
-						
-						$value = $domtree->createElement("value");
-						$learningResourceType->appendChild($value);
+		$technical = $domtree->createElement("technical");
+		$item->appendChild($technical);
+				
+			$format = $domtree->createElement("format", $file->mimetype);
+			$technical->appendChild($format);
+					
+			$size = $domtree->createElement("size", $file->filesize . " KB");
+			$technical->appendChild($size);
+					
+			$location = $domtree->createElement("location", $CFG->wwwroot.'/local/jointly/download.php?id='.$file->id);
+			$technical->appendChild($location);
+			
+			$component = $domtree->createElement("component", $file->component);
+			$technical->appendChild($component);
+			
+			$filearea = $domtree->createElement("filearea", $file->filearea);
+			$technical->appendChild($filearea);
+				
+		$educational = $domtree->createElement("educational");
+		$item->appendChild($educational);
+		
+			$learningResourceType = $domtree->createElement("learningResourceType");
+			$educational->appendChild($learningResourceType);
+
+				$source = $domtree->createElement("source");
+				$learningResourceType->appendChild($source);
+				
+				$value = $domtree->createElement("value");
+				$learningResourceType->appendChild($value);
 		
 	}
 
@@ -667,4 +735,12 @@ function get_license_types_string($license_ids) {
 	}
 	
 	return $ids;
+}
+
+function get_licence_description_string($licence) {
+	global $DB;
+	
+	$licence_desc = $DB->get_record_sql('SELECT fullname FROM {license} WHERE shortname = ?', array($licence));
+	
+	return $licence_desc;
 }
