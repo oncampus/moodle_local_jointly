@@ -26,7 +26,7 @@ require_once('search_form.php');
 require_once('locallib.php');
 
 $search = optional_param('search', '', PARAM_RAW);
-$format = optional_param('format', '', PARAM_RAW);
+$verb = optional_param('verb', '', PARAM_RAW);
 
 $context = context_system::instance();
  
@@ -73,7 +73,7 @@ $params = array('resource' => 'user',
 		 
 $files = $DB->get_records_sql($sql.$and, $params);
 
-if ($format == '') {
+if ($verb == '') {
 	echo $OUTPUT->header();
 	echo $OUTPUT->heading(get_string('pluginname', 'local_jointly'));
 	
@@ -116,12 +116,15 @@ if ($format == '') {
 	
 	echo $OUTPUT->footer();
 }
-elseif ($format == 'json') {
+elseif ($verb == 'json') {
 	$metadata = get_metadata_array($files);
 	echo json_encode($metadata, JSON_UNESCAPED_SLASHES);
 }
-elseif ($format == 'lom') {
+elseif ($verb == 'getrecord') {
 	get_lom($files);
+}
+elseif ($verb == 'listidentifiers') {
+	get_listidentifiers($files);
 }
 
 

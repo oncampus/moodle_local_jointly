@@ -561,6 +561,8 @@ function get_metadata_array($files) {
 
 function get_lom($files) {
 	global $CFG, $DB;
+	
+	// System specific data like identifier, title, description or keywords can be handled over an additional form
 
 	$xml = '';
 
@@ -580,8 +582,8 @@ function get_lom($files) {
 	$requesturi = $CFG->wwwroot . '\local\jointly\view.php?format=lom';
 	$xmlRequest = $domtree->createElement("request", $requesturi);
 	$xmlRequest->setAttribute("verb", "GetRecord");
-	$xmlRequest->setAttribute("metadataPrefix", "oai_lom-fhl");  // tbd
-	$xmlRequest->setAttribute("identifier", "FHL-22082018"); // Can be implemented over a form for individual settings, maybe?
+	$xmlRequest->setAttribute("metadataPrefix", "oai_lom-de"); // tbd: input
+	$xmlRequest->setAttribute("identifier", "22082018"); // tbd: input
 	$xmlMeta->appendChild($xmlRequest);	
 	
 	$xmlGetRecord = $domtree->createElement("GetRecord");
@@ -593,7 +595,7 @@ function get_lom($files) {
 			$xmlHeader = $domtree->createElement("header");
 			$xmlRecord->appendChild($xmlHeader);
 	
-				$xmlHeaderIdentifier = $domtree->createElement("identifier", "unknown");
+				$xmlHeaderIdentifier = $domtree->createElement("identifier", "22082018"); // tbd: input
 				$xmlHeader->appendChild($xmlHeaderIdentifier);
 				
 				$xmlHeaderDatestamp = $domtree->createElement("datestamp", $datetime);
@@ -607,9 +609,46 @@ function get_lom($files) {
 				$xmlMetaDataLOM->setAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
 				$xmlMetaDataLOM->setAttribute("xsi:schemaLocation", "http://ltsc.ieee.org/xsd/LOM http://ltsc.ieee.org/xsd/lomv1.0/lom.xsd");	
 				$xmlMetaData->appendChild($xmlMetaDataLOM);
+				
+				$xmlMetaGeneral = $domtree->createElement("general");
+				$xmlMetaDataLOM->appendChild($xmlMetaGeneral);
+				
+				
+				$xmlMetaIdentifier = $domtree->createElement("identifier", "22082018"); // tbd: input
+				$xmlMetaGeneral->appendChild($xmlMetaIdentifier);
+				
+				$xmlMetaTitle = $domtree->createElement("title"); // tbd: input
+				$xmlMetaGeneral->appendChild($xmlMetaTitle);
+				
+				$xmlMetaTitleString = $domtree->createElement("string", "Sammlung der medialen Inhalte aus den verschiedenen Systemkomponenten von Moodle");
+				$xmlMetaTitleString->setAttribute("language", "de");
+				$xmlMetaTitle->appendChild($xmlMetaTitleString);
 
+				
+				$xmlMetaDescription = $domtree->createElement("description"); // tbd: input
+				$xmlMetaGeneral->appendChild($xmlMetaDescription);
+				
+				$xmlMetaDescriptionString = $domtree->createElement("string", "Mit dem Moodle-Plugin können übergreifend aus mehreren Komponenten die medialen Inhalte zusammengetragen und übersichtlich dargestellt werden. Die Metadaten, wie z. B. Beschreibung, Titel oder die Schlagworte können über eine Eingabemaske (folgt noch) beliebig angepasst werden.");
+				$xmlMetaDescriptionString->setAttribute("language", "de");
+				$xmlMetaDescription->appendChild($xmlMetaDescriptionString);
+				
+
+				$keyword = array("jointly", "Open Source", "Free for all", "ILD", "FH Lübeck", "oncampus"); // tbd: input
+				// array...
+				foreach ($keyword as $k) {
+					$xmlMetaKeyword = $domtree->createElement("keyword"); 
+					$xmlMetaKeywordString = $domtree->createElement("string", $k); 
+					$xmlMetaKeywordString->setAttribute("language", "de");
+					$xmlMetaKeyword->appendChild($xmlMetaKeywordString);
+					$xmlMetaGeneral->appendChild($xmlMetaKeyword);
+				}
+
+				// structure
+				// aggregationlevel
+				
+				//lifecycle
+				
 	
-	// TBD - Child elements for meta data... like general, description,etc...
 
 	// Merge child elements with opening element		
 	$domtree->appendChild($xmlMeta);
@@ -618,7 +657,7 @@ function get_lom($files) {
 	// http://sodis.de/cp/oai_pmh/oai.php?verb=getRecord&identifier=BWS-04986135&metadataPrefix=oai_lom-eaf
 	// https://www.oaforum.org/otherfiles/berl_oai-tutorial_de.pdf
 	
-	foreach ($files as $file) { // ToDo: pro file 1x <record>
+	foreach ($files as $file) { 
 		$item = $domtree->createElement("item");
 		$xmlRecord->appendChild($item);
 		
@@ -715,6 +754,67 @@ function get_lom($files) {
 		send_file($xml_filename, 'lom.xml', null, 0, false, false, '', true);
 		unlink($xml_filename);
 	}
+}
+
+function get_listidentifiers($files) {	
+	global $CFG, $DB;
+
+	$xml = '';
+
+    $domtree = new DOMDocument('1.0', 'UTF-8');
+	
+	$xmlMeta = $domtree->createElement("OAI-PMH");
+	$xmlMeta->setAttribute("xmlns", "http://www.openarchives.org/OAI/2.0/");
+	$xmlMeta->setAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
+	$xmlMeta->setAttribute("xsi:schemaLocation", "http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd");
+
+	$datetime = new DateTime(date('Y-m-d H:i:s'));
+	$datetime = $datetime->format('Y-m-d\T H:i:s\Z'); // ISO8601 acc. to http://openarchives.org/OAI/openarchivesprotocol.html#Dates	
+	$xmlResponseDate = $domtree->createElement("responseDate", $datetime);
+	$xmlMeta->appendChild($xmlResponseDate);
+	
+	$metadataPrefix = "oai_lom-de"; // temp
+	
+	$requesturi = $CFG->wwwroot . '\local\jointly\view.php';
+	$xmlRequest = $domtree->createElement("request", $requesturi);
+	$xmlRequest->setAttribute("verb", "ListIdentifiers");
+	$xmlRequest->setAttribute("metadataPrefix", $metadataPrefix);
+	$xmlMeta->appendChild($xmlRequest);	
+	
+	$xmlListIdentifiers = $domtree->createElement("ListIdentifiers");
+	$xmlMeta->appendChild($xmlListIdentifiers);	
+	
+	
+	// Merge child elements with opening element		
+	$domtree->appendChild($xmlMeta);
+
+
+	// http://sodis.de/cp/oai_pmh/oai.php?verb=getRecord&identifier=BWS-04986135&metadataPrefix=oai_lom-eaf
+	// https://www.oaforum.org/otherfiles/berl_oai-tutorial_de.pdf
+	
+	foreach ($files as $file) { 
+		
+		$header = $domtree->createElement("header");
+		$xmlListIdentifiers->appendChild($header);
+		
+			$identifier = $domtree->createElement("identifier", "FHL-" . $file->id);
+			$header->appendChild($identifier);
+			
+			$datestamp = new DateTime(date('Y-m-d H:i:s'));
+			$datestamp = $datestamp->format('Y-m-d\T H:i:s\Z'); // ISO8601 acc. to http://openarchives.org/OAI/openarchivesprotocol.html#Dates	
+			$xmlDatestamp = $domtree->createElement("datestamp", $datestamp);
+			$header->appendChild($xmlDatestamp);		
+		
+	}
+
+	if ($tempname = tempnam($CFG->dirroot.'/local/jointly/xml/', 'lom_')) {
+		$xml_filename = $tempname.'.xml';
+		$domtree->save($xml_filename);
+		unlink($tempname);
+		send_file($xml_filename, 'lom.xml', null, 0, false, false, '', true);
+		unlink($xml_filename);
+	}
+	
 }
 
 function get_license_types_string($license_ids) {
