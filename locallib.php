@@ -559,11 +559,20 @@ function get_metadata_array($files) {
 	return $metadata;
 }
 
-function get_lom($files) {
+
+function get_lom($files, $language) {
 	global $CFG, $DB;
 	
-	// System specific data like identifier, title, description or keywords can be handled over an additional form
-
+	if (empty($language)) {
+		$language = $CFG->lang;
+	}
+	
+	$getmetadata = get_custom_metadata($language);
+		
+	if (!$getmetadata) {
+		redirect(new moodle_url('/local/jointly/view.php'), get_string('getmetadataerror', 'local_jointly'), null, \core\output\notification::NOTIFY_INFO);
+	}		
+	
 	$xml = '';
 
     $domtree = new DOMDocument('1.0', 'UTF-8');
@@ -579,11 +588,11 @@ function get_lom($files) {
 	$xmlResponseDate = $domtree->createElement("responseDate", $datetime);
 	$xmlMeta->appendChild($xmlResponseDate);
 	
-	$requesturi = $CFG->wwwroot . '\local\jointly\view.php?format=lom';
+	$requesturi = $CFG->wwwroot . '\local\jointly\view.php?verb=GetRecord';
 	$xmlRequest = $domtree->createElement("request", $requesturi);
-	$xmlRequest->setAttribute("verb", "GetRecord");
-	$xmlRequest->setAttribute("metadataPrefix", "oai_lom-de"); // tbd: input
-	$xmlRequest->setAttribute("identifier", "22082018"); // tbd: input
+	$xmlRequest->setAttribute("verb", "GetRecord");		
+	$xmlRequest->setAttribute("metadataPrefix", $getmetadata->metadataprefix);
+	$xmlRequest->setAttribute("identifier", $getmetadata->identifier);
 	$xmlMeta->appendChild($xmlRequest);	
 	
 	$xmlGetRecord = $domtree->createElement("GetRecord");
@@ -595,7 +604,7 @@ function get_lom($files) {
 			$xmlHeader = $domtree->createElement("header");
 			$xmlRecord->appendChild($xmlHeader);
 	
-				$xmlHeaderIdentifier = $domtree->createElement("identifier", "22082018"); // tbd: input
+				$xmlHeaderIdentifier = $domtree->createElement("identifier", $getmetadata->identifier);
 				$xmlHeader->appendChild($xmlHeaderIdentifier);
 				
 				$xmlHeaderDatestamp = $domtree->createElement("datestamp", $datetime);
@@ -614,45 +623,36 @@ function get_lom($files) {
 				$xmlMetaDataLOM->appendChild($xmlMetaGeneral);
 				
 				
-				$xmlMetaIdentifier = $domtree->createElement("identifier", "22082018"); // tbd: input
+				$xmlMetaIdentifier = $domtree->createElement("identifier", $getmetadata->identifier);
 				$xmlMetaGeneral->appendChild($xmlMetaIdentifier);
 				
-				$xmlMetaTitle = $domtree->createElement("title"); // tbd: input
+				$xmlMetaTitle = $domtree->createElement("title");
 				$xmlMetaGeneral->appendChild($xmlMetaTitle);
 				
-				$xmlMetaTitleString = $domtree->createElement("string", "Sammlung der medialen Inhalte aus den verschiedenen Systemkomponenten von Moodle");
-				$xmlMetaTitleString->setAttribute("language", "de");
+				$xmlMetaTitleString = $domtree->createElement("string", $getmetadata->title);
+				$xmlMetaTitleString->setAttribute("language", $getmetadata->language);
 				$xmlMetaTitle->appendChild($xmlMetaTitleString);
 
 				
-				$xmlMetaDescription = $domtree->createElement("description"); // tbd: input
+				$xmlMetaDescription = $domtree->createElement("description");
 				$xmlMetaGeneral->appendChild($xmlMetaDescription);
 				
-				$xmlMetaDescriptionString = $domtree->createElement("string", "Mit dem Moodle-Plugin können übergreifend aus mehreren Komponenten die medialen Inhalte zusammengetragen und übersichtlich dargestellt werden. Die Metadaten, wie z. B. Beschreibung, Titel oder die Schlagworte können über eine Eingabemaske (folgt noch) beliebig angepasst werden.");
-				$xmlMetaDescriptionString->setAttribute("language", "de");
+				$xmlMetaDescriptionString = $domtree->createElement("string", $getmetadata->description);
+				$xmlMetaDescriptionString->setAttribute("language", $getmetadata->language);
 				$xmlMetaDescription->appendChild($xmlMetaDescriptionString);
 				
 
-				$keyword = array("jointly", "Open Source", "Free for all", "ILD", "FH Lübeck", "oncampus"); // tbd: input
-				// array...
+				$keyword = explode(',', $getmetadata->keywords);
 				foreach ($keyword as $k) {
 					$xmlMetaKeyword = $domtree->createElement("keyword"); 
 					$xmlMetaKeywordString = $domtree->createElement("string", $k); 
-					$xmlMetaKeywordString->setAttribute("language", "de");
+					$xmlMetaKeywordString->setAttribute("language", $getmetadata->language);
 					$xmlMetaKeyword->appendChild($xmlMetaKeywordString);
 					$xmlMetaGeneral->appendChild($xmlMetaKeyword);
-				}
-
-				// structure
-				// aggregationlevel
-				
-				//lifecycle
-				
-	
+				}	
 
 	// Merge child elements with opening element		
 	$domtree->appendChild($xmlMeta);
-
 
 	// http://sodis.de/cp/oai_pmh/oai.php?verb=getRecord&identifier=BWS-04986135&metadataPrefix=oai_lom-eaf
 	// https://www.oaforum.org/otherfiles/berl_oai-tutorial_de.pdf
@@ -759,6 +759,12 @@ function get_lom($files) {
 function get_listidentifiers($files) {	
 	global $CFG, $DB;
 
+	$getmetadata = get_custom_metadata($CFG->lang);
+		
+	if (!$getmetadata) {
+		redirect(new moodle_url('/local/jointly/view.php'), get_string('getmetadataerror', 'local_jointly'), null, \core\output\notification::NOTIFY_INFO);
+	}	
+	
 	$xml = '';
 
     $domtree = new DOMDocument('1.0', 'UTF-8');
@@ -773,12 +779,11 @@ function get_listidentifiers($files) {
 	$xmlResponseDate = $domtree->createElement("responseDate", $datetime);
 	$xmlMeta->appendChild($xmlResponseDate);
 	
-	$metadataPrefix = "oai_lom-de"; // temp
 	
-	$requesturi = $CFG->wwwroot . '\local\jointly\view.php';
+	$requesturi = $CFG->wwwroot . '\local\jointly\view.php?verb=ListIdentifiers';
 	$xmlRequest = $domtree->createElement("request", $requesturi);
 	$xmlRequest->setAttribute("verb", "ListIdentifiers");
-	$xmlRequest->setAttribute("metadataPrefix", $metadataPrefix);
+	$xmlRequest->setAttribute("metadataPrefix", $getmetadata->metadataprefix);
 	$xmlMeta->appendChild($xmlRequest);	
 	
 	$xmlListIdentifiers = $domtree->createElement("ListIdentifiers");
@@ -797,7 +802,7 @@ function get_listidentifiers($files) {
 		$header = $domtree->createElement("header");
 		$xmlListIdentifiers->appendChild($header);
 		
-			$identifier = $domtree->createElement("identifier", "FHL-" . $file->id);
+			$identifier = $domtree->createElement("identifier", $getmetadata->listidentprefix . $file->id);
 			$header->appendChild($identifier);
 			
 			$datestamp = new DateTime(date('Y-m-d H:i:s'));
@@ -843,4 +848,35 @@ function get_licence_description_string($licence) {
 	$licence_desc = $DB->get_record_sql('SELECT fullname FROM {license} WHERE shortname = ?', array($licence));
 	
 	return $licence_desc;
+}
+
+function get_custom_metadata($language) {
+	global $DB;
+	
+	$custom_metadata = $DB->get_record('local_jointly', array('language' => $language));
+	
+	if (!empty($custom_metadata)) {
+		return $custom_metadata;
+	} else {
+		return false;
+	}
+	
+}
+
+function meta_language_switch() {
+	global $DB;
+	
+	$sql = "SELECT language FROM {local_jointly}";
+	
+	$language = $DB->get_records_sql($sql);
+	
+	foreach($language as $la) {
+		$langurl = new moodle_url('/local/jointly/meta_edit.php?language=' . $la->language);		
+		echo html_writer::link($langurl, $la->language) . " - ";
+	}
+	
+	$newlang = new moodle_url('/local/jointly/meta_edit.php');
+	echo html_writer::link($newlang, get_string('editmeta_newlanguage', 'local_jointly'));
+	echo "<hr>";
+
 }

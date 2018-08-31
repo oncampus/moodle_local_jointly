@@ -27,6 +27,7 @@ require_once('locallib.php');
 
 $search = optional_param('search', '', PARAM_RAW);
 $verb = optional_param('verb', '', PARAM_RAW);
+$language = optional_param('language', '', PARAM_RAW);
 
 $context = context_system::instance();
  
@@ -37,8 +38,6 @@ if (get_config('local_jointly', 'freeforall') != 1) {
 if (get_config('local_jointly', 'admins_only') == 1 and !has_capability('moodle/site:config', $context)) {
 	redirect($CFG->wwwroot);
 }
-
-
  
 $PAGE->set_context($context);
 $PAGE->set_url('/local/jointly/view.php');
@@ -79,6 +78,11 @@ if ($verb == '') {
 	
 	$mform->display();
 	
+	if (has_capability('moodle/site:config', $context)) {
+		$url = new moodle_url('/local/jointly/meta_edit.php?language=' . $CFG->lang);
+		echo html_writer::link($url, get_string('editmetadata', 'local_jointly')) . '<br><br>';
+	}
+		
 	$table = new flexible_table('MODULE_TABLE');
 	$table->define_columns(array('filename', 
 								 'description',
@@ -120,10 +124,10 @@ elseif ($verb == 'json') {
 	$metadata = get_metadata_array($files);
 	echo json_encode($metadata, JSON_UNESCAPED_SLASHES);
 }
-elseif ($verb == 'getrecord') {
-	get_lom($files);
+elseif ($verb == 'GetRecord') {
+	get_lom($files, $language);
 }
-elseif ($verb == 'listidentifiers') {
+elseif ($verb == 'ListIdentifiers') {
 	get_listidentifiers($files);
 }
 

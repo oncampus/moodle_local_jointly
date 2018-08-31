@@ -49,3 +49,20 @@ $string['author'] = 'author';
 $string['license'] = 'license';
 $string['timecreated'] = 'timecreated';
 $string['timemodified'] = 'timemodified';
+
+$string['editmetadata'] = 'Metadaten bearbeiten';
+$string['editmeta_language'] = 'Sprachschlüssel';
+$string['editmeta_identifier'] = 'ID (Persistenter Identifier)';
+$string['editmeta_title'] = 'Titel';
+$string['editmeta_description'] = 'Beschreibung';
+$string['editmeta_keywords'] = 'Schlagworte/Keywords';
+$string['editmeta_metadataprefix'] = 'MetadataPrefix';
+$string['editmeta_listidentprefix'] = 'Prefix für ListIdentifiers';
+
+$string['editmeta_selecterror'] = 'Fehler beim Auslesen des Datensatzes.';
+$string['editmeta_updateerror'] = 'Der ausgewählte Datensatz konnte nicht aktualisiert werden.';
+$string['editmeta_inserterror'] = 'Fehler beim Einfügen der Daten.';
+
+$string['getmetadataerror'] = 'Bitte für die jeweilige Sprache die Metadaten pflegen, damit die Anfrage vollständig bearbeitet werden kann.';
+$string['editmetadata_languageswitch'] = 'Sprache auswählen';
+$string['editmeta_newlanguage'] = 'neue Sprache hinzufügen';
