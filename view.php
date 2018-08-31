@@ -124,10 +124,10 @@ elseif ($verb == 'json') {
 	$metadata = get_metadata_array($files);
 	echo json_encode($metadata, JSON_UNESCAPED_SLASHES);
 }
-elseif ($verb == 'getrecord') {
+elseif ($verb == 'getRecord') {
 	get_lom($files, $language);
 }
-elseif ($verb == 'listidentifiers') {
+elseif ($verb == 'ListIdentifiers') {
 	get_listidentifiers($files);
 }
 
