@@ -80,8 +80,14 @@ if ($verb == '') {
 	
 	if (has_capability('moodle/site:config', $context)) {
 		$url = new moodle_url('/local/jointly/meta_edit.php?language=' . $CFG->lang);
-		echo html_writer::link($url, get_string('editmetadata', 'local_jointly')) . '<br><br>';
+		echo html_writer::link($url, get_string('editmetadata', 'local_jointly')) . ' | ';
 	}
+
+	// View getRecord and ListIdentifiers
+    $url = new moodle_url('/local/jointly/view.php?verb=ListIdentifiers');
+	echo html_writer::link($url, 'XML ListIdentifiers') . ' | ';
+    $url = new moodle_url('/local/jointly/view.php?verb=getRecord');
+	echo html_writer::link($url, 'XML getRecord') . '<br><br>';
 		
 	$table = new flexible_table('MODULE_TABLE');
 	$table->define_columns(array('filename', 
