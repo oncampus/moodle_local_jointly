@@ -23,7 +23,7 @@
 $string['pluginname'] = 'jointly';
 
 $string['admins_only_title'] = 'Admins only';
-$string['admins_only_desc'] = 'When checkbox is activated, only users with the capability moodle/site:config) can access the view.php.';
+$string['admins_only_desc'] = 'When checkbox is activated, only users with the capability moodle/site:config can access the view.php.';
 $string['file_types'] = 'File types';
 $string['file_types_desc'] = 'The following file types will be considered. 
                               Leave the field blank to search for all file types.
