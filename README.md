@@ -1,1 +1,5 @@
-# moodle_local_jointly
+# Jointly
+A local plugin.
+
+## About Jointly
+
