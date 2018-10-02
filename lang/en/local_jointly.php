@@ -23,21 +23,16 @@
 $string['pluginname'] = 'jointly';
 
 $string['admins_only_title'] = 'Admins only';
-$string['admins_only_desc'] = 'Wenn das Häkchen gesetzt ist, können nur Teilnehmer/innen auf 
-							   die Dateien und Inforamtionen zugreifen, die Seitenbearbeitungsrechte 
-							   (moodle/site:config) besitzen.';
-$string['file_types'] = 'Dateitypen';
-$string['file_types_desc'] = 'Folgende Dateitypen werden berücksichtigt. 
-							  Wenn das Feld leer bleibt, werden alle Dateitypen erlaubt. 
-							  Mehrere mit Komma getrennt angeben (pdf,jpg,...)';
+$string['admins_only_desc'] = 'When checkbox is activated, only users with the capability moodle/site:config) can access the view.php.';
+$string['file_types'] = 'File types';
+$string['file_types_desc'] = 'The following file types will be considered. 
+                              Leave the field blank to search for all file types.
+							  Separate file types with comma (pdf,jpg,...)';
 $string['file_types_default'] = '';
 $string['freeforall_title'] = 'free for all';
-$string['freeforall_desc'] = 'Wenn das Häkchen gesetzt ist, könne alle Dateien, 
-							  die in Moodle angelegt wurden, heruntergeladen werden. 
-							  Egal ob man im System angemeldet ist oder nicht.';
-$string['license_types'] = 'Erlaubte Lizenz-Typen';
-$string['license_types_desc'] = 'Es werden nur Dateien ausgegeben, die unter den hier 
-								 ausgewählten Lizenzen erstellt wurden.';
+$string['freeforall_desc'] = 'When checkbox is activated, all files can be downloaded by every user without authentification.';
+$string['license_types'] = 'Allowed licence typesn';
+$string['license_types_desc'] = 'Only records which matching the selected licenses will be shown.';
 
 $string['component'] = 'component';
 $string['description'] = 'description';
@@ -50,19 +45,19 @@ $string['license'] = 'license';
 $string['timecreated'] = 'timecreated';
 $string['timemodified'] = 'timemodified';
 
-$string['editmetadata'] = 'Metadaten bearbeiten';
-$string['editmeta_language'] = 'Sprachschlüssel';
-$string['editmeta_identifier'] = 'ID (Persistenter Identifier)';
-$string['editmeta_title'] = 'Titel';
-$string['editmeta_description'] = 'Beschreibung';
-$string['editmeta_keywords'] = 'Schlagworte/Keywords';
+$string['editmetadata'] = 'Edit Metadata';
+$string['editmeta_language'] = 'Language key';
+$string['editmeta_identifier'] = 'ID (Persistent Identifier)';
+$string['editmeta_title'] = 'Title';
+$string['editmeta_description'] = 'Description';
+$string['editmeta_keywords'] = 'Keywords';
 $string['editmeta_metadataprefix'] = 'MetadataPrefix';
-$string['editmeta_listidentprefix'] = 'Prefix für ListIdentifiers';
+$string['editmeta_listidentprefix'] = 'Prefix for ListIdentifiers';
 
-$string['editmeta_selecterror'] = 'Fehler beim Auslesen des Datensatzes.';
-$string['editmeta_updateerror'] = 'Der ausgewählte Datensatz konnte nicht aktualisiert werden.';
-$string['editmeta_inserterror'] = 'Fehler beim Einfügen der Daten.';
+$string['editmeta_selecterror'] = 'Database error! The record could not be read.';
+$string['editmeta_updateerror'] = 'Database error! Unable to update the selected record.';
+$string['editmeta_inserterror'] = 'Database error! Unable to insert the selected record.';
 
-$string['getmetadataerror'] = 'Bitte für die jeweilige Sprache die Metadaten pflegen, damit die Anfrage vollständig bearbeitet werden kann.';
-$string['editmetadata_languageswitch'] = 'Sprache auswählen';
-$string['editmeta_newlanguage'] = 'neue Sprache hinzufügen';
+$string['getmetadataerror'] = 'Please add metadata for the selected language.';
+$string['editmetadata_languageswitch'] = 'Select language';
+$string['editmeta_newlanguage'] = 'Add new language';
