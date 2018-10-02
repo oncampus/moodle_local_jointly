@@ -85,9 +85,9 @@ if ($verb == '') {
 
 	// View getRecord and ListIdentifiers
     $url = new moodle_url('/local/jointly/view.php?verb=ListIdentifiers');
-	echo html_writer::link($url, 'XML ListIdentifiers') . ' | ';
+	echo html_writer::link($url, 'XML ListIdentifiers', array('target' => '_blank')) . ' | ';
     $url = new moodle_url('/local/jointly/view.php?verb=getRecord');
-	echo html_writer::link($url, 'XML getRecord') . '<br><br>';
+	echo html_writer::link($url, 'XML getRecord', array('target' => '_blank')) . '<br><br>';
 		
 	$table = new flexible_table('MODULE_TABLE');
 	$table->define_columns(array('filename', 
